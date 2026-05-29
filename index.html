@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biblios — Digital Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1410;
+    --paper: #f8f3eb;
+    --paper-dark: #ede8df;
+    --accent: #b5451b;
+    --accent-light: #f5e8e2;
+    --gold: #c9922a;
+    --gold-light: #fdf3e3;
+    --muted: #7a6e62;
+    --border: rgba(26,20,16,0.12);
+    --shadow: 0 2px 16px rgba(26,20,16,0.08);
+    --radius: 6px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    background: var(--ink);
+    padding: 0 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--paper);
+    letter-spacing: 0.02em;
+  }
+  .logo span { color: var(--gold); font-style: italic; }
+
+  nav { display: flex; gap: 2rem; }
+  nav a {
+    color: rgba(248,243,235,0.65);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    cursor: pointer;
+  }
+  nav a:hover, nav a.active { color: var(--paper); }
+
+  .header-actions { display: flex; align-items: center; gap: 1rem; }
+  .btn-return {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.2s;
+  }
+  .btn-return:hover { background: #9a3a16; }
+
+  /* ─── HERO ─── */
+  .hero {
+    background: var(--ink);
+    padding: 3.5rem 3rem 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '"';
+    font-family: 'Playfair Display', serif;
+    font-size: 28rem;
+    color: rgba(255,255,255,0.025);
+    position: absolute;
+    top: -6rem;
+    right: -2rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    color: var(--paper);
+    font-weight: 400;
+    line-height: 1.15;
+    max-width: 520px;
+    margin-bottom: 0.4rem;
+  }
+  .hero h1 em { color: var(--gold); }
+  .hero p {
+    color: rgba(248,243,235,0.5);
+    font-size: 0.95rem;
+    margin-bottom: 2rem;
+    font-weight: 300;
+  }
+
+  .search-wrap {
+    display: flex;
+    gap: 0;
+    max-width: 580px;
+    background: white;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1.5px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .search-wrap:focus-within { border-color: var(--gold); }
+
+  #search-input {
+    flex: 1;
+    padding: 14px 18px;
+    border: none;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: transparent;
+  }
+  #search-input::placeholder { color: #aaa; }
+
+  .search-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0 24px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: background 0.2s;
+  }
+  .search-btn:hover { background: #9a3a16; }
+
+  .hero-stats {
+    display: flex;
+    gap: 2.5rem;
+    margin-top: 2rem;
+  }
+  .stat { }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    color: rgba(248,243,235,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  /* ─── MAIN LAYOUT ─── */
+  .main { display: flex; gap: 0; min-height: calc(100vh - 64px); }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    width: 230px;
+    flex-shrink: 0;
+    background: var(--paper-dark);
+    border-right: 1px solid var(--border);
+    padding: 2rem 1.5rem;
+  }
+  .sidebar h3 {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+  .category-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+  .category-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 0.88rem;
+  }
+  .category-list li:hover { background: rgba(26,20,16,0.07); }
+  .category-list li.active {
+    background: var(--accent);
+    color: white;
+  }
+  .category-list li.active .cat-count { background: rgba(255,255,255,0.2); color: white; }
+  .cat-count {
+    background: rgba(26,20,16,0.1);
+    color: var(--muted);
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .sidebar-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+  }
+
+  .filter-group { margin-bottom: 1.5rem; }
+  .filter-group h3 { margin-bottom: 0.75rem; }
+  .filter-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .filter-option input[type="checkbox"] { accent-color: var(--accent); }
+
+  /* ─── CONTENT AREA ─── */
+  .content { flex: 1; padding: 2rem 2.5rem; overflow-y: auto; }
+
+  .content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+  }
+  .content-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+  }
+  .result-meta { font-size: 0.82rem; color: var(--muted); }
+
+  .sort-select {
+    border: 1px solid var(--border);
+    background: white;
+    padding: 7px 12px;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    color: var(--ink);
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* ─── BOOK GRID ─── */
+  .book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .book-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+  .book-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+
+  .book-cover {
+    height: 180px;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 1rem;
+  }
+  .book-cover-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: white;
+    line-height: 1.2;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+  .book-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 55%);
+  }
+
+  .badge-available, .badge-issued {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .badge-available { background: #d4edda; color: #155724; }
+  .badge-issued { background: #f8d7da; color: #721c24; }
+
+  .book-body { padding: 1rem; }
+  .book-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 3px;
+    line-height: 1.3;
+  }
+  .book-author { font-size: 0.78rem; color: var(--muted); margin-bottom: 8px; }
+  .book-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .book-genre-tag {
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 500;
+  }
+
+  .btn-issue {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-issue:hover { background: #333; }
+  .btn-issue:disabled {
+    background: #e0dbd5;
+    color: var(--muted);
+    cursor: default;
+  }
+
+  /* ─── MODAL OVERLAY ─── */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,20,16,0.6);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .modal {
+    background: var(--paper);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    background: var(--ink);
+    padding: 1.25rem 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--paper);
+    font-weight: 400;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    color: rgba(248,243,235,0.6);
+    font-size: 1.4rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--paper); }
+
+  .modal-body { padding: 1.75rem; }
+  .modal-book-info {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-cover {
+    width: 70px;
+    height: 95px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .modal-book-details h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+  .modal-book-details p { font-size: 0.83rem; color: var(--muted); margin-bottom: 3px; }
+
+  .form-row { margin-bottom: 1.1rem; }
+  .form-row label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .form-row input, .form-row select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: white;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-row input:focus, .form-row select:focus { border-color: var(--accent); }
+
+  .modal-footer {
+    padding: 1rem 1.75rem;
+    background: var(--paper-dark);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  .btn-cancel {
+    padding: 9px 20px;
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-cancel:hover { background: var(--paper); }
+  .btn-confirm {
+    padding: 9px 22px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-confirm:hover { background: #9a3a16; }
+
+  /* ─── ISSUED BOOKS PANEL (Return section) ─── */
+  .panel-section {
+    padding: 2rem 2.5rem;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+  }
+  .issued-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+  .issued-table th {
+    text-align: left;
+    padding: 11px 16px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+  }
+  .issued-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink);
+  }
+  .issued-table tr:last-child td { border-bottom: none; }
+  .issued-table tr:hover td { background: var(--paper); }
+  .overdue { color: #c0392b; font-weight: 500; }
+  .on-time { color: #27ae60; }
+
+  .btn-return-book {
+    padding: 5px 14px;
+    background: var(--gold-light);
+    color: var(--gold);
+    border: 1px solid rgba(201,146,42,0.3);
+    border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-return-book:hover { background: #fde8c2; }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 0.88rem;
+    z-index: 500;
+    display: none;
+    border-left: 4px solid var(--gold);
+    animation: fadeInUp 0.3s ease;
+  }
+  .toast.show { display: block; }
+  @keyframes fadeInUp {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* ─── VIEWS ─── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* No results */
+  .no-results {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--muted);
+  }
+  .no-results svg { opacity: 0.25; margin-bottom: 1rem; }
+  .no-results h3 { font-family: 'Playfair Display', serif; font-weight: 400; margin-bottom: 0.5rem; color: var(--ink); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">Biblio<span>s</span></div>
+  <nav>
+    <a class="active" onclick="showView('catalog')">Catalog</a>
+    <a onclick="showView('issued')">Issued Books</a>
+    <a onclick="showView('about')">About</a>
+  </nav>
+  <div class="header-actions">
+    <button class="btn-return" onclick="showView('issued')">📋 My Books</button>
+  </div>
+</header>
+
+<!-- HERO / SEARCH -->
+<div class="hero" id="hero-section">
+  <h1>Discover your next<br><em>great read</em></h1>
+  <p>Browse, borrow and return books — all in one place.</p>
+  <div class="search-wrap">
+    <input id="search-input" type="text" placeholder="Search by title, author, or genre…" oninput="filterBooks()">
+    <button class="search-btn" onclick="filterBooks()">Search</button>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num" id="stat-total">0</div>
+      <div class="stat-label">Total Books</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-available">0</div>
+      <div class="stat-label">Available</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-issued-count">0</div>
+      <div class="stat-label">Issued</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h3>Categories</h3>
+    <ul class="category-list" id="category-list"></ul>
+    <hr class="sidebar-divider">
+    <div class="filter-group">
+      <h3>Availability</h3>
+      <label class="filter-option"><input type="checkbox" id="filter-available" onchange="filterBooks()"> Available only</label>
+    </div>
+    <div class="filter-group">
+      <h3>Sort By</h3>
+      <select class="sort-select" id="sort-select" onchange="filterBooks()" style="width:100%">
+        <option value="title">Title A–Z</option>
+        <option value="author">Author A–Z</option>
+        <option value="year">Newest First</option>
+      </select>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <div style="flex:1; overflow-y:auto;">
+
+    <!-- CATALOG VIEW -->
+    <div class="view active" id="view-catalog">
+      <div class="content">
+        <div class="content-header">
+          <div>
+            <h2 id="view-title">All Books</h2>
+            <p class="result-meta" id="result-count"></p>
+          </div>
+        </div>
+        <div class="book-grid" id="book-grid"></div>
+        <div class="no-results" id="no-results" style="display:none">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="12" y="8" width="40" height="48" rx="4" stroke="#7a6e62" stroke-width="2" fill="none"/>
+            <line x1="20" y1="22" x2="44" y2="22" stroke="#7a6e62" stroke-width="2"/>
+            <line x1="20" y1="30" x2="44" y2="30" stroke="#7a6e62" stroke-width="2"/>
+            <line x1="20" y1="38" x2="34" y2="38" stroke="#7a6e62" stroke-width="2"/>
+          </svg>
+          <h3>No books found</h3>
+          <p>Try a different search term or category.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ISSUED / RETURN VIEW -->
+    <div class="view" id="view-issued">
+      <div class="panel-section">
+        <h2 class="section-title">Issued &amp; Return</h2>
+        <table class="issued-table" id="issued-table">
+          <thead>
+            <tr>
+              <th>Book Title</th>
+              <th>Author</th>
+              <th>Issued To</th>
+              <th>Issue Date</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="issued-tbody"></tbody>
+        </table>
+        <p id="no-issued" style="text-align:center;padding:3rem;color:var(--muted);display:none">No books currently issued. Browse the catalog to issue one!</p>
+      </div>
+    </div>
+
+    <!-- ABOUT VIEW -->
+    <div class="view" id="view-about">
+      <div class="panel-section">
+        <h2 class="section-title">About Biblios</h2>
+        <p style="max-width:560px;color:var(--muted);line-height:1.7;font-size:0.95rem;">
+          Biblios is a digital library management system that helps you browse, issue, and return books with ease.
+          Our curated collection spans fiction, science, history, philosophy, and much more.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ISSUE MODAL -->
+<div class="modal-backdrop" id="issue-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Issue Book</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-book-info">
+        <div class="modal-cover" id="modal-cover" style="border-radius:4px;"></div>
+        <div class="modal-book-details">
+          <h4 id="modal-title">—</h4>
+          <p id="modal-author">—</p>
+          <p id="modal-genre">—</p>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Member Name</label>
+        <input type="text" id="member-name" placeholder="Enter full name">
+      </div>
+      <div class="form-row">
+        <label>Member ID</label>
+        <input type="text" id="member-id" placeholder="e.g. LIB-20240001">
+      </div>
+      <div class="form-row">
+        <label>Issue Date</label>
+        <input type="date" id="issue-date">
+      </div>
+      <div class="form-row">
+        <label>Due Date (14 days)</label>
+        <input type="date" id="due-date">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmIssue()">Confirm Issue</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ───
+const books = [
+  { id:1, title:"The Name of the Wind", author:"Patrick Rothfuss", genre:"Fantasy", year:2007, color:"#2c4a6b", available:true },
+  { id:2, title:"Sapiens", author:"Yuval Noah Harari", genre:"History", year:2011, color:"#5a3e2b", available:true },
+  { id:3, title:"Dune", author:"Frank Herbert", genre:"Sci-Fi", year:1965, color:"#7a5c1a", available:false },
+  { id:4, title:"Crime and Punishment", author:"Fyodor Dostoevsky", genre:"Classic", year:1866, color:"#3b2c45", available:true },
+  { id:5, title:"Thinking, Fast and Slow", author:"Daniel Kahneman", genre:"Psychology", year:2011, color:"#1a4a3a", available:true },
+  { id:6, title:"Atomic Habits", author:"James Clear", genre:"Self-Help", year:2018, color:"#4a2020", available:false },
+  { id:7, title:"The Great Gatsby", author:"F. Scott Fitzgerald", genre:"Classic", year:1925, color:"#1e3a50", available:true },
+  { id:8, title:"A Brief History of Time", author:"Stephen Hawking", genre:"Science", year:1988, color:"#2a2a4a", available:true },
+  { id:9, title:"1984", author:"George Orwell", genre:"Dystopia", year:1949, color:"#2e2e2e", available:true },
+  { id:10, title:"The Alchemist", author:"Paulo Coelho", genre:"Fiction", year:1988, color:"#5c4a00", available:false },
+  { id:11, title:"Educated", author:"Tara Westover", genre:"Memoir", year:2018, color:"#3a4a2e", available:true },
+  { id:12, title:"The Pragmatic Programmer", author:"Andrew Hunt", genre:"Technology", year:1999, color:"#1a3a4a", available:true },
+  { id:13, title:"To Kill a Mockingbird", author:"Harper Lee", genre:"Classic", year:1960, color:"#4a3a1a", available:true },
+  { id:14, title:"The Subtle Art of Not Giving a F*ck", author:"Mark Manson", genre:"Self-Help", year:2016, color:"#4a1a1a", available:true },
+  { id:15, title:"Foundation", author:"Isaac Asimov", genre:"Sci-Fi", year:1951, color:"#1e1e4a", available:false },
+  { id:16, title:"Man's Search for Meaning", author:"Viktor Frankl", genre:"Philosophy", year:1946, color:"#2a3a2a", available:true },
+];
+
+let issuedList = [];
+let activeCategory = 'All';
+let selectedBook = null;
+
+function getCategories() {
+  const cats = ['All', ...new Set(books.map(b => b.genre))].sort();
+  return cats;
+}
+
+function updateStats() {
+  const avail = books.filter(b => b.available).length;
+  document.getElementById('stat-total').textContent = books.length;
+  document.getElementById('stat-available').textContent = avail;
+  document.getElementById('stat-issued-count').textContent = issuedList.length;
+}
+
+function buildCategoryList() {
+  const list = document.getElementById('category-list');
+  list.innerHTML = '';
+  const cats = getCategories();
+  cats.forEach(cat => {
+    const count = cat === 'All' ? books.length : books.filter(b => b.genre === cat).length;
+    const li = document.createElement('li');
+    li.className = cat === activeCategory ? 'active' : '';
+    li.innerHTML = `<span>${cat}</span><span class="cat-count">${count}</span>`;
+    li.onclick = () => { activeCategory = cat; buildCategoryList(); filterBooks(); };
+    list.appendChild(li);
+  });
+}
+
+function filterBooks() {
+  const query = document.getElementById('search-input').value.toLowerCase();
+  const availOnly = document.getElementById('filter-available').checked;
+  const sort = document.getElementById('sort-select').value;
+
+  let filtered = books.filter(b => {
+    const matchCat = activeCategory === 'All' || b.genre === activeCategory;
+    const matchQ = !query || b.title.toLowerCase().includes(query) || b.author.toLowerCase().includes(query) || b.genre.toLowerCase().includes(query);
+    const matchAvail = !availOnly || b.available;
+    return matchCat && matchQ && matchAvail;
+  });
+
+  if (sort === 'title') filtered.sort((a,b) => a.title.localeCompare(b.title));
+  else if (sort === 'author') filtered.sort((a,b) => a.author.localeCompare(b.author));
+  else if (sort === 'year') filtered.sort((a,b) => b.year - a.year);
+
+  renderBooks(filtered);
+
+  const titleEl = document.getElementById('view-title');
+  titleEl.textContent = activeCategory === 'All' ? 'All Books' : activeCategory;
+  document.getElementById('result-count').textContent = `${filtered.length} book${filtered.length !== 1 ? 's' : ''} found`;
+}
+
+function renderBooks(list) {
+  const grid = document.getElementById('book-grid');
+  const noRes = document.getElementById('no-results');
+  grid.innerHTML = '';
+  if (!list.length) { noRes.style.display = 'block'; return; }
+  noRes.style.display = 'none';
+  list.forEach(book => {
+    const card = document.createElement('div');
+    card.className = 'book-card';
+    card.innerHTML = `
+      <div class="book-cover" style="background:${book.color}">
+        <div class="book-cover-title">${book.title}</div>
+        <span class="${book.available ? 'badge-available' : 'badge-issued'}">${book.available ? 'Available' : 'Issued'}</span>
+      </div>
+      <div class="book-body">
+        <div class="book-title">${book.title}</div>
+        <div class="book-author">${book.author}</div>
+        <div class="book-meta">
+          <span class="book-genre-tag">${book.genre}</span>
+          <span>${book.year}</span>
+        </div>
+        <button class="btn-issue" onclick="openIssueModal(${book.id})" ${book.available ? '' : 'disabled'}>${book.available ? 'Issue Book' : 'Not Available'}</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ─── MODAL ───
+function openIssueModal(bookId) {
+  selectedBook = books.find(b => b.id === bookId);
+  if (!selectedBook) return;
+  document.getElementById('modal-title').textContent = selectedBook.title;
+  document.getElementById('modal-author').textContent = selectedBook.author;
+  document.getElementById('modal-genre').textContent = selectedBook.genre + ' · ' + selectedBook.year;
+  document.getElementById('modal-cover').style.cssText = `background:${selectedBook.color};width:70px;height:95px;border-radius:4px;`;
+  const today = new Date();
+  const due = new Date(today); due.setDate(due.getDate() + 14);
+  document.getElementById('issue-date').value = today.toISOString().split('T')[0];
+  document.getElementById('due-date').value = due.toISOString().split('T')[0];
+  document.getElementById('member-name').value = '';
+  document.getElementById('member-id').value = '';
+  document.getElementById('issue-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('issue-modal').classList.remove('open');
+  selectedBook = null;
+}
+
+function confirmIssue() {
+  const name = document.getElementById('member-name').value.trim();
+  const mid = document.getElementById('member-id').value.trim();
+  if (!name || !mid) { showToast('⚠️ Please fill in member name and ID.'); return; }
+  if (!selectedBook) return;
+  selectedBook.available = false;
+  const record = {
+    bookId: selectedBook.id,
+    title: selectedBook.title,
+    author: selectedBook.author,
+    member: name,
+    memberId: mid,
+    issueDate: document.getElementById('issue-date').value,
+    dueDate: document.getElementById('due-date').value,
+  };
+  issuedList.push(record);
+  closeModal();
+  updateStats();
+  filterBooks();
+  renderIssued();
+  showToast(`✅ "${selectedBook.title}" issued to ${name}`);
+}
+
+// ─── ISSUED TABLE ───
+function renderIssued() {
+  const tbody = document.getElementById('issued-tbody');
+  const noEl = document.getElementById('no-issued');
+  tbody.innerHTML = '';
+  if (!issuedList.length) { noEl.style.display = 'block'; return; }
+  noEl.style.display = 'none';
+  const today = new Date().toISOString().split('T')[0];
+  issuedList.forEach((rec, idx) => {
+    const overdue = rec.dueDate < today;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${rec.title}</strong></td>
+      <td>${rec.author}</td>
+      <td>${rec.member} <span style="font-size:0.73rem;color:var(--muted)">(${rec.memberId})</span></td>
+      <td>${formatDate(rec.issueDate)}</td>
+      <td class="${overdue ? 'overdue' : 'on-time'}">${formatDate(rec.dueDate)}${overdue ? ' ⚠️' : ''}</td>
+      <td><span style="background:${overdue?'#fde8e8':'#e8f5e9'};color:${overdue?'#c0392b':'#27ae60'};padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:500">${overdue?'Overdue':'Active'}</span></td>
+      <td><button class="btn-return-book" onclick="returnBook(${idx})">Return</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function returnBook(idx) {
+  const rec = issuedList[idx];
+  const book = books.find(b => b.id === rec.bookId);
+  if (book) book.available = true;
+  issuedList.splice(idx, 1);
+  updateStats();
+  filterBooks();
+  renderIssued();
+  showToast(`📚 "${rec.title}" returned successfully.`);
+}
+
+function formatDate(d) {
+  const [y,m,day] = d.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+}
+
+// ─── TOAST ───
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ─── VIEWS ───
+function showView(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  const map = { catalog: 0, issued: 1, about: 2 };
+  document.querySelectorAll('nav a')[map[view]].classList.add('active');
+  document.getElementById('hero-section').style.display = view === 'catalog' ? '' : 'none';
+  if (view === 'issued') renderIssued();
+}
+
+// ─── INIT ───
+buildCategoryList();
+filterBooks();
+updateStats();
+
+// close modal on backdrop click
+document.getElementById('issue-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>
